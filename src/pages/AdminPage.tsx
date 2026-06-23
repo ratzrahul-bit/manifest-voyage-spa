@@ -229,7 +229,7 @@ export default function AdminPage() {
   const active = users.filter(u => u.status === 'active').length
   const pending = users.filter(u => u.status === 'pending').length
 
-if (loading) return <div className="empty">Loading...</div>
+  if (loading) return <div className="empty">Loading...</div>
 
   return (
     <div>
