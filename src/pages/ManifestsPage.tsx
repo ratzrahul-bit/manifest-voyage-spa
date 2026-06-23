@@ -27,7 +27,10 @@ export default function ManifestsPage() {
         if (error) throw error
         const a = document.createElement('a')
         a.href = URL.createObjectURL(data)
-        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
+        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) 
+        const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') 
+        const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') 
+        a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
         a.click()
       } else {
         // Fallback for old records without file_path
