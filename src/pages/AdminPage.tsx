@@ -229,7 +229,7 @@ export default function AdminPage() {
   const active = users.filter(u => u.status === 'active').length
   const pending = users.filter(u => u.status === 'pending').length
 
-  if (loading) return <div className="empty">Loading...</div>
+if (loading) return <div className="empty">Loading...</div>
 
   return (
     <div>
@@ -344,4 +344,79 @@ export default function AdminPage() {
               {editingManifestId === m.id ? (
                 <div style={{ background: 'var(--gray-50)', borderRadius: 'var(--radius)', padding: '1rem' }}>
                   <p className="section-label" style={{ marginBottom: '0.75rem' }}>Edit manifest</p>
-                  <div className="field-group" ref={vesselRef} style={{
+                  <div className="field-group" ref={vesselRef} style={{ position: 'relative' }}>
+                    <div className="field-label">Vessel name <span className="req">*</span></div>
+                    <input type="text" value={vesselSearch}
+                      onChange={e => { setVesselSearch(e.target.value); setEditFields(p => ({ ...p, vessel_name: e.target.value })); setShowVesselDrop(true) }}
+                      onFocus={() => setShowVesselDrop(true)} placeholder="Search or select vessel..." autoComplete="off" />
+                    {showVesselDrop && filteredVessels.length > 0 && (
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#fff', border: '0.5px solid var(--border-hover)', borderRadius: 'var(--radius)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', maxHeight: 160, overflowY: 'auto', marginTop: 2 }}>
+                        {filteredVessels.map(v => (
+                          <div key={v} onMouseDown={() => { setEditFields(p => ({ ...p, vessel_name: v })); setVesselSearch(v); setShowVesselDrop(false) }}
+                            style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}
+                            onMouseEnter={e => (e.target as HTMLElement).style.background = 'var(--gray-100)'}
+                            onMouseLeave={e => (e.target as HTMLElement).style.background = 'transparent'}>
+                            🚢 {v}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid-2">
+                    <div className="field-group">
+                      <div className="field-label">Voyage no. <span className="req">*</span></div>
+                      <input type="text" value={editFields.voyage_no} onChange={e => setEditFields(p => ({ ...p, voyage_no: e.target.value }))} placeholder="e.g. 2025/44" />
+                    </div>
+                    <div className="field-group">
+                      <div className="field-label">Rotation no. <span className="req">*</span></div>
+                      <input type="text" value={editFields.rotation_no} maxLength={7}
+                        onChange={e => setEditFields(p => ({ ...p, rotation_no: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 1198010" />
+                    </div>
+                  </div>
+                  <div className="field-group">
+                    <div className="field-label">Update file <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                      <button className={`btn btn-sm${!replaceFile ? ' btn-primary' : ''}`} onClick={() => setReplaceFile(false)}>Add alongside</button>
+                      <button className={`btn btn-sm${replaceFile ? ' btn-primary' : ''}`} onClick={() => setReplaceFile(true)}>Replace old file</button>
+                    </div>
+                    <div className="drop-zone" style={{ padding: '0.75rem' }} onClick={() => fileRef.current?.click()}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.name.endsWith('.json')) setNewFile(f) }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{newFile ? `✓ ${newFile.name}` : 'Click or drop new JSON file'}</div>
+                    </div>
+                    <input ref={fileRef} type="file" accept=".json" style={{ display: 'none' }}
+                      onChange={e => { if (e.target.files?.[0]) setNewFile(e.target.files[0]) }} />
+                  </div>
+                  {editAlert && <div className={`alert alert-${editAlert.type}`} style={{ marginBottom: '0.75rem' }}>{editAlert.msg}</div>}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-primary" onClick={() => saveManifest(m)} disabled={savingManifest}>{savingManifest ? 'Saving...' : '✓ Save changes'}</button>
+                    <button className="btn" onClick={cancelEditManifest}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="manifest-row" style={{ padding: 0, border: 'none', margin: 0 }}>
+                  <div className="mr-icon">📄</div>
+                  <div className="mr-main">
+                    <div className="mr-vessel">{m.vessel_name} <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--text-muted)' }}>{m.file_name}</span></div>
+                    <div className="mr-meta">Voyage {m.voyage_no} · Rotation {m.rotation_no} · {m.uploader_name} · {m.created_at?.slice(0, 10)}</div>
+                  </div>
+                  <div className="mr-right">
+                    <span className={`badge ${BMAP[m.status] || 'badge-blue'}`}>{BLBL[m.status] || m.status}</span>
+                    <button className="btn btn-sm" onClick={() => startEditManifest(m)}>✏ Edit</button>
+                    <button className="btn btn-dl" onClick={() => download(m)} disabled={downloadingId === m.id}>
+                      {downloadingId === m.id ? '...' : '↓ Download'}
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => deleteManifest(m)}
+                      disabled={deletingId === m.id} style={{ padding: '5px 10px' }}>
+                      {deletingId === m.id ? '...' : '🗑'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
