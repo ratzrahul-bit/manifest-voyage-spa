@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 export type UserRole = 'admin' | 'shipping_line' | 'cha'
+
 export interface AppUser {
   id: string
   email: string
@@ -25,22 +26,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function fetchProfile(uid: string): Promise<AppUser | null> {
+  async function fetchProfile(uid: string, authEmail: string): Promise<AppUser | null> {
     const { data } = await supabase.from('profiles').select('*').eq('id', uid).single()
-    return data as AppUser | null
+    if (!data) return null
+    // Always use auth email as source of truth
+    return { ...data, email: authEmail } as AppUser
   }
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (data.session?.user) {
-        const p = await fetchProfile(data.session.user.id)
+        const p = await fetchProfile(data.session.user.id, data.session.user.email || '')
         setUser(p)
       }
       setLoading(false)
     })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
       if (session?.user) {
-        const p = await fetchProfile(session.user.id)
+        const p = await fetchProfile(session.user.id, session.user.email || '')
         setUser(p)
       } else {
         setUser(null)
