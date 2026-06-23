@@ -15,6 +15,9 @@ export default function AdminPage() {
   const [vesselMsg, setVesselMsg] = useState<{ type: string; msg: string } | null>(null)
   const [activeSection, setActiveSection] = useState<'users' | 'vessels' | 'manifests'>('users')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingUser, setEditingUser] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [savingUser, setSavingUser] = useState(false)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -30,6 +33,16 @@ export default function AdminPage() {
 
   async function updateUserStatus(id: string, status: string) {
     await supabase.from('profiles').update({ status }).eq('id', id)
+    fetchAll()
+  }
+
+  async function saveUserName(id: string) {
+    if (!editName.trim()) return
+    setSavingUser(true)
+    await supabase.from('profiles').update({ name: editName.trim() }).eq('id', id)
+    setSavingUser(false)
+    setEditingUser(null)
+    setEditName('')
     fetchAll()
   }
 
@@ -55,11 +68,7 @@ export default function AdminPage() {
   async function deleteManifest(m: any) {
     if (!confirm(`Delete manifest "${m.file_name || m.rotation_no}"? This cannot be undone.`)) return
     setDeletingId(m.id)
-    // Delete from storage if path exists
-    if (m.file_path) {
-      await supabase.storage.from('manifests').remove([m.file_path])
-    }
-    // Delete from DB
+    if (m.file_path) await supabase.storage.from('manifests').remove([m.file_path])
     await supabase.from('manifests').delete().eq('id', m.id)
     setDeletingId(null)
     fetchAll()
@@ -117,11 +126,30 @@ export default function AdminPage() {
             const statusBadge = u.status === 'active' ? 'badge-green' : u.status === 'pending' ? 'badge-amber' : 'badge-red'
             const statusLabel = u.status === 'active' ? 'Active' : u.status === 'pending' ? 'Pending' : 'Rejected'
             const initials = u.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '??'
+            const isEditing = editingUser === u.id
             return (
-              <div className="user-row" key={u.id}>
+              <div className="user-row" key={u.id} style={{ flexWrap: 'wrap', gap: 8 }}>
                 <div className="avatar" style={{ background: u.role === 'cha' ? '#E1F5EE' : '#E6F1FB', color: u.role === 'cha' ? '#0F6E56' : '#0C447C', flexShrink: 0 }}>{initials}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  {isEditing ? (
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                        style={{ fontSize: 13, padding: '4px 8px', flex: 1 }}
+                        onKeyDown={e => e.key === 'Enter' && saveUserName(u.id)}
+                        autoFocus />
+                      <button className="btn btn-success btn-sm" onClick={() => saveUserName(u.id)} disabled={savingUser}>
+                        {savingUser ? '...' : '✓'}
+                      </button>
+                      <button className="btn btn-sm" onClick={() => { setEditingUser(null); setEditName('') }}>✕</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</div>
+                      <button onClick={() => { setEditingUser(u.id); setEditName(u.name) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, padding: '0 2px' }}
+                        title="Edit name">✏</button>
+                    </div>
+                  )}
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.company} · {u.email}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
@@ -177,12 +205,8 @@ export default function AdminPage() {
               <div className="mr-right">
                 <span className={`badge ${BMAP[m.status] || 'badge-blue'}`}>{BLBL[m.status] || m.status}</span>
                 <button className="btn btn-dl" onClick={() => download(m)}>↓ Download</button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => deleteManifest(m)}
-                  disabled={deletingId === m.id}
-                  style={{ padding: '5px 10px' }}
-                >
+                <button className="btn btn-danger btn-sm" onClick={() => deleteManifest(m)}
+                  disabled={deletingId === m.id} style={{ padding: '5px 10px' }}>
                   {deletingId === m.id ? '...' : '🗑'}
                 </button>
               </div>
