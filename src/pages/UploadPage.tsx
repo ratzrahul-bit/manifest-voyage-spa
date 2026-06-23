@@ -105,7 +105,7 @@ export default function UploadPage() {
       // Send acknowledgement to uploader
       await sendEmail(
         user!.email, user!.name,
-        `Manifest uploaded — Rotation ${rotation}`,
+        `Manifest uploaded — ${vessel} · Voyage ${voyage} · Rotation ${rotation}`,
         `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
           <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — Upload Acknowledgement</h2>
           <p>Dear ${user!.name},</p>
@@ -127,7 +127,7 @@ export default function UploadPage() {
       if (chaUsers && chaUsers.length > 0) {
         await Promise.all(chaUsers.map((cha: any) => sendEmail(
           cha.email, cha.name,
-          `New manifest available — ${vessel} · Rotation ${rotation}`,
+          `New manifest available — ${vessel} · Voyage ${voyage} · Rotation ${rotation}`,
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
             <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — New Manifest Available</h2>
             <p>Dear ${cha.name},</p>
