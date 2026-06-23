@@ -2,6 +2,14 @@ import { useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 
+async function sendEmail(to: string, toName: string, subject: string, html: string) {
+  await fetch('/.netlify/functions/send-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, toName, subject, html }),
+  })
+}
+
 export default function AuthPage() {
   const { signIn } = useAuth()
   const [tab, setTab] = useState<'login' | 'register'>('login')
@@ -40,6 +48,28 @@ export default function AuthPage() {
         role: isAdmin ? 'admin' : role,
         status: isAdmin ? 'active' : 'pending',
       })
+
+      // Notify admin of new registration (skip if admin registering themselves)
+      if (!isAdmin) {
+        const roleLabel = role === 'cha' ? 'CHA (Customs House Agent)' : 'Shipping Line / Liner Agent'
+        await sendEmail(
+          ADMIN_EMAIL, 'Admin',
+          `New registration — ${name} · ${company}`,
+          `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
+            <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — New User Registration</h2>
+            <p>A new user has registered and is awaiting your approval.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0">
+              <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Name</td><td style="padding:10px">${name}</td></tr>
+              <tr><td style="padding:10px;font-weight:600">Company</td><td style="padding:10px">${company}</td></tr>
+              <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Email</td><td style="padding:10px">${email}</td></tr>
+              <tr><td style="padding:10px;font-weight:600">Mobile</td><td style="padding:10px">${mobile || '—'}</td></tr>
+              <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">User type</td><td style="padding:10px">${roleLabel}</td></tr>
+            </table>
+            <p><a href="https://igmnepal.netlify.app/admin" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Go to Admin Panel → Approve</a></p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+          </div>`
+        )
+      }
     }
     setSuccess(isAdmin ? 'Admin account created. You can now sign in.' : 'Registration submitted. Awaiting admin approval.')
     setLoading(false)
