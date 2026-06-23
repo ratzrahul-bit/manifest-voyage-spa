@@ -34,6 +34,8 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [savingUser, setSavingUser] = useState(false)
+  const [editingVesselId, setEditingVesselId] = useState<string | null>(null)
+  const [editVesselName, setEditVesselName] = useState('')
 
   useEffect(() => { fetchAll() }, [])
 
@@ -53,9 +55,9 @@ export default function AdminPage() {
       const u = users.find(x => x.id === id)
       if (u?.email) {
         const roleLabel = u.role === 'cha' ? 'CHA (Customs House Agent)' : 'Shipping Line / Liner Agent'
-        await sendEmail(u.email, u.name, 'Your IGM Nepal account has been approved',
+        await sendEmail(u.email, u.name, 'Your ManifestNepal account has been approved',
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — Account Approved</h2>
+            <h2 style="color:#185FA5;margin-bottom:16px">ManifestNepal — Account Approved</h2>
             <p>Dear ${u.name},</p>
             <p>Your registration on the <strong>India-Nepal Manifest Exchange</strong> platform has been approved.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0">
@@ -63,21 +65,21 @@ export default function AdminPage() {
               <tr><td style="padding:10px;font-weight:600">Company</td><td style="padding:10px">${u.company}</td></tr>
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">User type</td><td style="padding:10px">${roleLabel}</td></tr>
             </table>
-            <p><a href="https://igmnepal.netlify.app" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Sign in to IGM Nepal →</a></p>
-            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+            <p><a href="https://igmnepal.netlify.app" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Sign in to ManifestNepal →</a></p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from ManifestNepal — India-Nepal Manifest Exchange.</p>
           </div>`)
       }
     }
     if (status === 'rejected') {
       const u = users.find(x => x.id === id)
       if (u?.email) {
-        await sendEmail(u.email, u.name, 'Your IGM Nepal registration was not approved',
+        await sendEmail(u.email, u.name, 'Your ManifestNepal registration was not approved',
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#A32D2D;margin-bottom:16px">IGM Nepal — Registration Update</h2>
+            <h2 style="color:#A32D2D;margin-bottom:16px">ManifestNepal — Registration Update</h2>
             <p>Dear ${u.name},</p>
             <p>We regret to inform you that your registration could not be approved at this time.</p>
             <p>For queries contact <a href="mailto:manifestnepal@gmail.com">manifestnepal@gmail.com</a>.</p>
-            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from ManifestNepal.</p>
           </div>`)
       }
     }
@@ -101,6 +103,15 @@ export default function AdminPage() {
     const { error } = await supabase.from('vessels').insert({ name })
     if (error) { setVesselMsg({ type: 'danger', msg: error.message }); return }
     setNewVessel(''); setVesselMsg({ type: 'success', msg: `${name} added.` }); fetchAll()
+  }
+
+  async function saveVesselName(id: string) {
+    if (!editVesselName.trim()) return
+    if (vessels.find(v => v.name.toLowerCase() === editVesselName.trim().toLowerCase() && v.id !== id)) {
+      setVesselMsg({ type: 'danger', msg: 'Vessel name already exists.' }); return
+    }
+    await supabase.from('vessels').update({ name: editVesselName.trim() }).eq('id', id)
+    setEditingVesselId(null); setEditVesselName(''); fetchAll()
   }
 
   async function deleteUser(id: string, name: string) {
@@ -238,8 +249,21 @@ export default function AdminPage() {
           {vessels.length === 0 ? <div className="empty">No vessels added yet.</div> : vessels.map(v => (
             <div key={v.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '0.5px solid var(--border)' }}>
               <span style={{ fontSize: 16, marginRight: 10 }}>🚢</span>
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{v.name}</span>
-              <button className="btn btn-sm btn-danger" onClick={() => removeVessel(v.id, v.name)}>Remove</button>
+              {editingVesselId === v.id ? (
+                <div style={{ flex: 1, display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input type="text" value={editVesselName} onChange={e => setEditVesselName(e.target.value)}
+                    style={{ flex: 1, fontSize: 13, padding: '4px 8px' }}
+                    onKeyDown={e => e.key === 'Enter' && saveVesselName(v.id)} autoFocus />
+                  <button className="btn btn-success btn-sm" onClick={() => saveVesselName(v.id)}>✓</button>
+                  <button className="btn btn-sm" onClick={() => { setEditingVesselId(null); setEditVesselName('') }}>✕</button>
+                </div>
+              ) : (
+                <>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{v.name}</span>
+                  <button className="btn btn-sm" style={{ marginRight: 6 }} onClick={() => { setEditingVesselId(v.id); setEditVesselName(v.name) }}>✏ Edit</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => removeVessel(v.id, v.name)}>Remove</button>
+                </>
+              )}
             </div>
           ))}
         </div>
