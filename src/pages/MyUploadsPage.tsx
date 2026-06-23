@@ -22,9 +22,12 @@ export default function MyUploadsPage() {
       if (m.file_path) {
         const { data, error } = await supabase.storage.from('manifests').download(m.file_path)
         if (error) throw error
+        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10)
+        const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+        const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '')
         const a = document.createElement('a')
         a.href = URL.createObjectURL(data)
-        a.download = m.file_name || `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
         a.click()
       }
     } catch { alert('Download failed. Please try again.') }
