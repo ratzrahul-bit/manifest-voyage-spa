@@ -11,6 +11,8 @@ const VESSELS = [
 export default function UploadPage() {
   const { user } = useAuth()
   const [vessel, setVessel] = useState('')
+  const [customVessel, setCustomVessel] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
   const [voyage, setVoyage] = useState('')
   const [rotation, setRotation] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -20,6 +22,21 @@ export default function UploadPage() {
   const [over, setOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const finalVessel = showCustom ? customVessel : vessel
+
+  function handleVesselChange(val: string) {
+    if (val === '__custom__') {
+      setShowCustom(true)
+      setVessel('__custom__')
+      setCustomVessel('')
+    } else {
+      setShowCustom(false)
+      setVessel(val)
+      setCustomVessel('')
+    }
+    setErrors(p => ({ ...p, vessel: '' }))
+  }
+
   function handleFile(f: File) {
     if (!f.name.endsWith('.json')) { setAlert({ type: 'danger', msg: 'Please upload a .json file only.' }); return }
     setFile(f)
@@ -28,7 +45,7 @@ export default function UploadPage() {
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!vessel) e.vessel = 'Required'
+    if (!finalVessel.trim()) e.vessel = 'Required'
     if (!voyage.trim()) e.voyage = 'Required'
     if (!rotation.trim()) e.rotation = 'Required'
     if (!file) e.file = 'Please attach a JSON file'
@@ -47,7 +64,7 @@ export default function UploadPage() {
       if (uploadErr) throw uploadErr
 
       const { error: dbErr } = await supabase.from('manifests').insert({
-        vessel_name: vessel,
+        vessel_name: finalVessel.trim(),
         voyage_no: voyage.trim(),
         rotation_no: rotation.trim(),
         file_path: path,
@@ -60,8 +77,9 @@ export default function UploadPage() {
       })
       if (dbErr) throw dbErr
 
-      setAlert({ type: 'success', msg: `Manifest uploaded — ${vessel} · Voyage ${voyage} · Rotation ${rotation}` })
-      setVessel(''); setVoyage(''); setRotation(''); setFile(null)
+      setAlert({ type: 'success', msg: `Manifest uploaded — ${finalVessel} · Voyage ${voyage} · Rotation ${rotation}` })
+      setVessel(''); setCustomVessel(''); setShowCustom(false)
+      setVoyage(''); setRotation(''); setFile(null)
       if (fileRef.current) fileRef.current.value = ''
     } catch (err: any) {
       setAlert({ type: 'danger', msg: err.message || 'Upload failed. Please try again.' })
@@ -76,10 +94,21 @@ export default function UploadPage() {
 
         <div className="field-group">
           <div className="field-label">Vessel name <span className="req">*</span></div>
-          <select value={vessel} onChange={e => { setVessel(e.target.value); setErrors(p => ({ ...p, vessel: '' })) }}>
+          <select value={vessel} onChange={e => handleVesselChange(e.target.value)}>
             <option value="">— Select vessel —</option>
-            {VESSELS.map(v => <option key={v}>{v}</option>)}
+            {VESSELS.map(v => <option key={v} value={v}>{v}</option>)}
+            <option value="__custom__">+ Type new vessel name...</option>
           </select>
+          {showCustom && (
+            <input
+              type="text"
+              style={{ marginTop: 8 }}
+              placeholder="Type vessel name here"
+              value={customVessel}
+              onChange={e => { setCustomVessel(e.target.value); setErrors(p => ({ ...p, vessel: '' })) }}
+              autoFocus
+            />
+          )}
           {errors.vessel && <div style={{ fontSize: 12, color: 'var(--red)', marginTop: 4 }}>⚠ {errors.vessel}</div>}
         </div>
 
@@ -125,7 +154,7 @@ export default function UploadPage() {
           <button className="btn btn-primary" onClick={submit} disabled={loading}>
             {loading ? 'Uploading...' : '↑ Upload manifest'}
           </button>
-          <button className="btn" onClick={() => { setVessel(''); setVoyage(''); setRotation(''); setFile(null); setErrors({}); setAlert(null); if (fileRef.current) fileRef.current.value = '' }}>Clear</button>
+          <button className="btn" onClick={() => { setVessel(''); setCustomVessel(''); setShowCustom(false); setVoyage(''); setRotation(''); setFile(null); setErrors({}); setAlert(null); if (fileRef.current) fileRef.current.value = '' }}>Clear</button>
         </div>
       </div>
     </div>
