@@ -9,11 +9,27 @@ export default function MyUploadsPage() {
   const { user } = useAuth()
   const [manifests, setManifests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.from('manifests').select('*').eq('uploaded_by', user!.id).order('created_at', { ascending: false })
       .then(({ data }) => { setManifests(data || []); setLoading(false) })
   }, [])
+
+  async function download(m: any) {
+    setDownloadingId(m.id)
+    try {
+      if (m.file_path) {
+        const { data, error } = await supabase.storage.from('manifests').download(m.file_path)
+        if (error) throw error
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(data)
+        a.download = m.file_name || `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        a.click()
+      }
+    } catch { alert('Download failed. Please try again.') }
+    setDownloadingId(null)
+  }
 
   return (
     <div>
@@ -32,6 +48,9 @@ export default function MyUploadsPage() {
             </div>
             <div className="mr-right">
               <span className={`badge ${BMAP[m.status] || 'badge-blue'}`}>{BLBL[m.status] || m.status}</span>
+              <button className="btn btn-dl" onClick={() => download(m)} disabled={downloadingId === m.id}>
+                {downloadingId === m.id ? '...' : '↓ Download'}
+              </button>
             </div>
           </div>
         ))}
