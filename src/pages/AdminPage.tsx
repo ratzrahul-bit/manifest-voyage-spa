@@ -4,6 +4,14 @@ import { supabase } from '../lib/supabase'
 const BMAP: Record<string, string> = { arrived: 'badge-green', 'in-transit': 'badge-amber', departed: 'badge-blue' }
 const BLBL: Record<string, string> = { arrived: 'Arrived', 'in-transit': 'In transit', departed: 'Departed' }
 
+async function sendEmail(to: string, toName: string, subject: string, html: string) {
+  await fetch('/.netlify/functions/send-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, toName, subject, html }),
+  })
+}
+
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([])
   const [manifests, setManifests] = useState<any[]>([])
@@ -33,6 +41,49 @@ export default function AdminPage() {
 
   async function updateUserStatus(id: string, status: string) {
     await supabase.from('profiles').update({ status }).eq('id', id)
+
+    // Send email to user on approval
+    if (status === 'active') {
+      const u = users.find(x => x.id === id)
+      if (u?.email) {
+        const roleLabel = u.role === 'cha' ? 'CHA (Customs House Agent)' : 'Shipping Line / Liner Agent'
+        await sendEmail(
+          u.email, u.name,
+          'Your IGM Nepal account has been approved',
+          `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
+            <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — Account Approved</h2>
+            <p>Dear ${u.name},</p>
+            <p>Your registration on the <strong>India-Nepal Manifest Exchange</strong> platform has been approved. You can now sign in and start using the platform.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0">
+              <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Name</td><td style="padding:10px">${u.name}</td></tr>
+              <tr><td style="padding:10px;font-weight:600">Company</td><td style="padding:10px">${u.company}</td></tr>
+              <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">User type</td><td style="padding:10px">${roleLabel}</td></tr>
+            </table>
+            <p><a href="https://igmnepal.netlify.app" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Sign in to IGM Nepal →</a></p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+          </div>`
+        )
+      }
+    }
+
+    // Send rejection email
+    if (status === 'rejected') {
+      const u = users.find(x => x.id === id)
+      if (u?.email) {
+        await sendEmail(
+          u.email, u.name,
+          'Your IGM Nepal registration was not approved',
+          `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
+            <h2 style="color:#A32D2D;margin-bottom:16px">IGM Nepal — Registration Update</h2>
+            <p>Dear ${u.name},</p>
+            <p>We regret to inform you that your registration on the India-Nepal Manifest Exchange platform could not be approved at this time.</p>
+            <p>For queries, please contact the platform administrator at <a href="mailto:manifestnepal@gmail.com">manifestnepal@gmail.com</a>.</p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+          </div>`
+        )
+      }
+    }
+
     fetchAll()
   }
 
@@ -150,7 +201,7 @@ export default function AdminPage() {
                         title="Edit name">✏</button>
                     </div>
                   )}
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.company} · {u.email}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.company} · {u.email} {u.mobile ? `· ${u.mobile}` : ''}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                   <span className={`badge ${roleBadge}`}>{roleLabel}</span>
