@@ -6,8 +6,8 @@ export default function UploadPage() {
   const { user } = useAuth()
   const [vessels, setVessels] = useState<string[]>([])
   const [vessel, setVessel] = useState('')
-  const [customVessel, setCustomVessel] = useState('')
-  const [showCustom, setShowCustom] = useState(false)
+  const [vesselSearch, setVesselSearch] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
   const [voyage, setVoyage] = useState('')
   const [rotation, setRotation] = useState('')
   const [files, setFiles] = useState<File[]>([])
@@ -16,21 +16,30 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
   const [over, setOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const vesselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     supabase.from('vessels').select('name').order('name').then(({ data }) => {
       setVessels(data?.map((r: any) => r.name) || [])
     })
+    // Close dropdown on outside click
+    function handleClick(e: MouseEvent) {
+      if (vesselRef.current && !vesselRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const finalVessel = showCustom ? customVessel : vessel
+  const filteredVessels = vessels.filter(v =>
+    v.toLowerCase().includes(vesselSearch.toLowerCase())
+  )
 
-  function handleVesselChange(val: string) {
-    if (val === '__custom__') {
-      setShowCustom(true); setVessel('__custom__'); setCustomVessel('')
-    } else {
-      setShowCustom(false); setVessel(val); setCustomVessel('')
-    }
+  function selectVessel(name: string) {
+    setVessel(name)
+    setVesselSearch(name)
+    setShowDropdown(false)
     setErrors(p => ({ ...p, vessel: '' }))
   }
 
@@ -52,7 +61,7 @@ export default function UploadPage() {
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!finalVessel.trim()) e.vessel = 'Required'
+    if (!vessel.trim()) e.vessel = 'Please select a vessel'
     if (!voyage.trim()) e.voyage = 'Required'
     if (!/^\d{7}$/.test(rotation.trim())) e.rotation = 'Rotation must be exactly 7 digits'
     if (files.length === 0) e.file = 'Please attach at least one JSON file'
@@ -66,7 +75,6 @@ export default function UploadPage() {
     setLoading(true); setAlert(null)
 
     try {
-      // Check if rotation already exists
       const { data: existing } = await supabase
         .from('manifests')
         .select('id, uploader_name, uploaded_by')
@@ -79,25 +87,21 @@ export default function UploadPage() {
           setAlert({ type: 'danger', msg: `Rotation ${rotation} already uploaded by ${orig.uploader_name}. Duplicate not allowed.` })
           setLoading(false); return
         }
-        // Same user — allow adding more parts
       }
 
-      // Upload all files
       const uploaded: string[] = []
       for (const file of files) {
         const path = `${user!.id}/${rotation.trim()}/${Date.now()}_${file.name}`
         const { error: uploadErr } = await supabase.storage
-          .from('manifests')
-          .upload(path, file, { contentType: 'application/json' })
+          .from('manifests').upload(path, file, { contentType: 'application/json' })
         if (uploadErr) throw uploadErr
         uploaded.push(path)
       }
 
-      // Insert one DB record per file
       const rows = await Promise.all(files.map(async (file, i) => {
         const content = await file.text()
         return {
-          vessel_name: finalVessel.trim(),
+          vessel_name: vessel.trim(),
           voyage_no: voyage.trim(),
           rotation_no: rotation.trim(),
           file_path: uploaded[i],
@@ -113,9 +117,8 @@ export default function UploadPage() {
       const { error: dbErr } = await supabase.from('manifests').insert(rows)
       if (dbErr) throw dbErr
 
-      setAlert({ type: 'success', msg: `${files.length} file${files.length > 1 ? 's' : ''} uploaded — ${finalVessel} · Voyage ${voyage} · Rotation ${rotation}` })
-      setVessel(''); setCustomVessel(''); setShowCustom(false)
-      setVoyage(''); setRotation(''); setFiles([])
+      setAlert({ type: 'success', msg: `${files.length} file${files.length > 1 ? 's' : ''} uploaded — ${vessel} · Voyage ${voyage} · Rotation ${rotation}` })
+      setVessel(''); setVesselSearch(''); setVoyage(''); setRotation(''); setFiles([])
       if (fileRef.current) fileRef.current.value = ''
     } catch (err: any) {
       setAlert({ type: 'danger', msg: err.message || 'Upload failed. Please try again.' })
@@ -128,18 +131,53 @@ export default function UploadPage() {
       <div className="card">
         <p className="section-label">Manifest details</p>
 
-        <div className="field-group">
+        {/* Searchable vessel picker */}
+        <div className="field-group" ref={vesselRef} style={{ position: 'relative' }}>
           <div className="field-label">Vessel name <span className="req">*</span></div>
-          <select value={vessel} onChange={e => handleVesselChange(e.target.value)}>
-            <option value="">— Select vessel —</option>
-            {vessels.map(v => <option key={v} value={v}>{v}</option>)}
-            
-          </select>
-          {showCustom && (
-            <input type="text" style={{ marginTop: 8 }} placeholder="Type vessel name"
-              value={customVessel}
-              onChange={e => { setCustomVessel(e.target.value); setErrors(p => ({ ...p, vessel: '' })) }}
-              autoFocus />
+          <input
+            type="text"
+            value={vesselSearch}
+            onChange={e => {
+              setVesselSearch(e.target.value)
+              setVessel('')
+              setShowDropdown(true)
+              setErrors(p => ({ ...p, vessel: '' }))
+            }}
+            onFocus={() => setShowDropdown(true)}
+            placeholder="Search or select vessel..."
+            autoComplete="off"
+          />
+          {showDropdown && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+              background: '#fff', border: '0.5px solid var(--border-hover)',
+              borderRadius: 'var(--radius)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+              maxHeight: 220, overflowY: 'auto', marginTop: 2
+            }}>
+              {filteredVessels.length === 0 ? (
+                <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text-muted)' }}>
+                  {vessels.length === 0 ? 'No vessels added yet. Contact admin.' : 'No vessels match your search.'}
+                </div>
+              ) : filteredVessels.map(v => (
+                <div key={v}
+                  onMouseDown={() => selectVessel(v)}
+                  style={{
+                    padding: '9px 14px', fontSize: 13, cursor: 'pointer',
+                    background: vessel === v ? 'var(--blue-light)' : 'transparent',
+                    color: vessel === v ? 'var(--blue-dark)' : 'var(--text)',
+                    fontWeight: vessel === v ? 500 : 400,
+                    borderBottom: '0.5px solid var(--border)'
+                  }}
+                  onMouseEnter={e => { if (vessel !== v) (e.target as HTMLElement).style.background = 'var(--gray-100)' }}
+                  onMouseLeave={e => { if (vessel !== v) (e.target as HTMLElement).style.background = 'transparent' }}
+                >
+                  🚢 {v}
+                </div>
+              ))}
+            </div>
+          )}
+          {vessel && (
+            <div style={{ fontSize: 12, color: 'var(--green)', marginTop: 4 }}>✓ {vessel} selected</div>
           )}
           {errors.vessel && <div style={{ fontSize: 12, color: 'var(--red)', marginTop: 4 }}>⚠ {errors.vessel}</div>}
         </div>
@@ -180,7 +218,7 @@ export default function UploadPage() {
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {files.map(f => (
               <div key={f.name} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
-                <span>✓</span>
+                <span style={{ color: 'var(--green)' }}>✓</span>
                 <span style={{ flex: 1 }}><strong>{f.name}</strong> · {(f.size / 1024).toFixed(1)} KB</span>
                 <button onClick={() => removeFile(f.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 14, padding: '0 4px' }}>✕</button>
               </div>
@@ -196,7 +234,7 @@ export default function UploadPage() {
           <button className="btn btn-primary" onClick={submit} disabled={loading}>
             {loading ? 'Uploading...' : `↑ Upload ${files.length > 1 ? files.length + ' files' : 'manifest'}`}
           </button>
-          <button className="btn" onClick={() => { setVessel(''); setCustomVessel(''); setShowCustom(false); setVoyage(''); setRotation(''); setFiles([]); setErrors({}); setAlert(null); if (fileRef.current) fileRef.current.value = '' }}>Clear</button>
+          <button className="btn" onClick={() => { setVessel(''); setVesselSearch(''); setVoyage(''); setRotation(''); setFiles([]); setErrors({}); setAlert(null); if (fileRef.current) fileRef.current.value = '' }}>Clear</button>
         </div>
       </div>
     </div>
