@@ -83,22 +83,29 @@ export default function UploadPage() {
         setLoading(false); return
       }
 
-      // Upload files
+      // Upload files to storage only — no raw_content in DB
       const uploaded: string[] = []
       for (const file of files) {
         const path = `${user!.id}/${rotation.trim()}/${Date.now()}_${file.name}`
-        const { error: uploadErr } = await supabase.storage.from('manifests').upload(path, file, { contentType: 'application/json' })
+        const { error: uploadErr } = await supabase.storage
+          .from('manifests')
+          .upload(path, file, { contentType: 'application/json' })
         if (uploadErr) throw uploadErr
         uploaded.push(path)
       }
 
-      // Insert DB rows
-      const rows = await Promise.all(files.map(async (file, i) => ({
-        vessel_name: vessel.trim(), voyage_no: voyage.trim(), rotation_no: rotation.trim(),
-        file_path: uploaded[i], file_name: file.name,
-        uploaded_by: user!.id, uploader_name: user!.name, uploader_company: user!.company,
-        status: 'departed', raw_content: await file.text(),
-      })))
+      // Insert DB rows — no raw_content column
+      const rows = files.map((file, i) => ({
+        vessel_name: vessel.trim(),
+        voyage_no: voyage.trim(),
+        rotation_no: rotation.trim(),
+        file_path: uploaded[i],
+        file_name: file.name,
+        uploaded_by: user!.id,
+        uploader_name: user!.name,
+        uploader_company: user!.company,
+        status: 'departed',
+      }))
       const { error: dbErr } = await supabase.from('manifests').insert(rows)
       if (dbErr) throw dbErr
 
