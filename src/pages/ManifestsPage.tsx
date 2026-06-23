@@ -27,14 +27,14 @@ export default function ManifestsPage() {
         if (error) throw error
         const a = document.createElement('a')
         a.href = URL.createObjectURL(data)
-        a.download = m.file_name || `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
         a.click()
       } else {
         // Fallback for old records without file_path
         const content = JSON.stringify({ vessel_name: m.vessel_name, voyage_no: m.voyage_no, rotation_no: m.rotation_no }, null, 2)
         const a = document.createElement('a')
         a.href = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
-        a.download = `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        const uploadDate2 = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) const cleanVessel2 = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') const cleanVoyage2 = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') a.download = `${cleanVessel2}_${cleanVoyage2}_${m.rotation_no}_${uploadDate2}.json`
         a.click()
       }
     } catch (err) {
