@@ -4,6 +4,13 @@ import { supabase } from '../lib/supabase'
 const BMAP: Record<string, string> = { arrived: 'badge-green', 'in-transit': 'badge-amber', departed: 'badge-blue' }
 const BLBL: Record<string, string> = { arrived: 'Arrived', 'in-transit': 'In transit', departed: 'Departed' }
 
+function getFileName(m: any) {
+  const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10)
+  const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+  const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '')
+  return `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
+}
+
 export default function ManifestsPage() {
   const [manifests, setManifests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,17 +34,13 @@ export default function ManifestsPage() {
         if (error) throw error
         const a = document.createElement('a')
         a.href = URL.createObjectURL(data)
-        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) 
-        const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') 
-        const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') 
-        a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
+        a.download = getFileName(m)
         a.click()
       } else {
-        // Fallback for old records without file_path
         const content = JSON.stringify({ vessel_name: m.vessel_name, voyage_no: m.voyage_no, rotation_no: m.rotation_no }, null, 2)
         const a = document.createElement('a')
         a.href = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
-        const uploadDate2 = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) const cleanVessel2 = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') const cleanVoyage2 = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') a.download = `${cleanVessel2}_${cleanVoyage2}_${m.rotation_no}_${uploadDate2}.json`
+        a.download = getFileName(m)
         a.click()
       }
     } catch (err) {
