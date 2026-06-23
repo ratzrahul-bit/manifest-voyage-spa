@@ -14,7 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const tabs = [
     { label: '↑ Upload', path: '/upload', roles: ['admin', 'shipping_line', 'cha'] },
-    { label: '≡ My uploads', path: '/my-uploads', roles: ['shipping_line'] },
+    { label: '≡ My uploads', path: '/my-uploads', roles: ['shipping_line', 'cha', 'admin'] },
     { label: '↓ Download', path: '/manifests', roles: ['cha', 'admin'] },
     { label: '⚙ Admin', path: '/admin', roles: ['admin'] },
   ].filter(t => t.roles.includes(user.role))
@@ -26,7 +26,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, background: 'var(--blue-light)', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🚢</div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Vessel Manifest Exchange</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>ManifestNepal</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>India-Nepal Manifest Exchange</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
