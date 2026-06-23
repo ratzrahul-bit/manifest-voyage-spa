@@ -61,7 +61,7 @@ export default function MyUploadsPage() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-async function fetchData() {
+  async function fetchData() {
     const { data } = await supabase.from('manifests').select('*')
       .eq('uploaded_by', user!.id).order('created_at', { ascending: false })
     setManifests(data || [])
@@ -205,7 +205,7 @@ async function fetchData() {
   const groups = groupByRotation(manifests)
   const filteredVessels = vessels.filter(v => v.toLowerCase().includes(vesselSearch.toLowerCase()))
 
-  return (
+return (
     <div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: '1rem' }}>
         {groups.length} rotation{groups.length !== 1 ? 's' : ''} · {manifests.length} file{manifests.length !== 1 ? 's' : ''} uploaded by you
