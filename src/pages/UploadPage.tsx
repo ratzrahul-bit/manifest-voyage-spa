@@ -133,7 +133,7 @@ export default function UploadPage() {
           <select value={vessel} onChange={e => handleVesselChange(e.target.value)}>
             <option value="">— Select vessel —</option>
             {vessels.map(v => <option key={v} value={v}>{v}</option>)}
-            <option value="__custom__">+ Type new vessel name...</option>
+            
           </select>
           {showCustom && (
             <input type="text" style={{ marginTop: 8 }} placeholder="Type vessel name"
