@@ -13,7 +13,7 @@ exports.handler = async function(event) {
       'api-key': BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender: { name: 'IGM Nepal', email: 'rathirahulraj@gmail.com' },
+      sender: { name: 'IGM Nepal', email: 'manifestnepal@gmail.com' },
       to: [{ email: to, name: toName }],
       subject,
       htmlContent: html,
