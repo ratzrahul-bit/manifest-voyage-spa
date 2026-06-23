@@ -12,6 +12,13 @@ async function sendEmail(to: string, toName: string, subject: string, html: stri
   })
 }
 
+function getFileName(m: any) {
+  const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10)
+  const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+  const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '')
+  return `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
+}
+
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([])
   const [manifests, setManifests] = useState<any[]>([])
@@ -97,10 +104,11 @@ export default function AdminPage() {
   }
 
   async function deleteUser(id: string, name: string) {
-  if (!confirm(`Permanently delete user "${name}"? This cannot be undone.`)) return
-  await supabase.from('profiles').delete().eq('id', id)
-  fetchAll()
-}
+    if (!confirm(`Permanently delete user "${name}"? This cannot be undone.`)) return
+    await supabase.from('profiles').delete().eq('id', id)
+    fetchAll()
+  }
+
   async function removeVessel(id: string, name: string) {
     if (!confirm(`Remove "${name}" from vessel list?`)) return
     await supabase.from('vessels').delete().eq('id', id); fetchAll()
@@ -122,16 +130,13 @@ export default function AdminPage() {
         if (error) throw error
         const a = document.createElement('a')
         a.href = URL.createObjectURL(data)
-        const uploadDate = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) 
-        const cleanVessel = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') 
-        const cleanVoyage = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') 
-        a.download = `${cleanVessel}_${cleanVoyage}_${m.rotation_no}_${uploadDate}.json`
+        a.download = getFileName(m)
         a.click()
       } else {
         const content = JSON.stringify({ vessel_name: m.vessel_name, voyage_no: m.voyage_no, rotation_no: m.rotation_no }, null, 2)
         const a = document.createElement('a')
         a.href = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
-        const uploadDate2 = m.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10) const cleanVessel2 = m.vessel_name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') const cleanVoyage2 = m.voyage_no.replace(/\//g, '-').replace(/\s+/g, '') a.download = `${cleanVessel2}_${cleanVoyage2}_${m.rotation_no}_${uploadDate2}.json`
+        a.download = getFileName(m)
         a.click()
       }
     } catch { alert('Download failed. Please try again.') }
