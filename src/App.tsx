@@ -20,7 +20,7 @@ function Inner() {
       <Routes>
         <Route path="/" element={<Navigate to={user.role === 'admin' ? '/admin' : user.role === 'cha' ? '/manifests' : '/upload'} />} />
         <Route path="/upload" element={<UploadPage />} />
-        {user.role === 'shipping_line' && <Route path="/my-uploads" element={<MyUploadsPage />} />}
+        <Route path="/my-uploads" element={<MyUploadsPage />} />
         {(user.role === 'cha' || user.role === 'admin') && <Route path="/manifests" element={<ManifestsPage />} />}
         {user.role === 'admin' && <Route path="/admin" element={<AdminPage />} />}
         <Route path="*" element={<Navigate to="/" />} />
