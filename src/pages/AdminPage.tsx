@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [vesselMsg, setVesselMsg] = useState<{ type: string; msg: string } | null>(null)
   const [activeSection, setActiveSection] = useState<'users' | 'vessels' | 'manifests'>('users')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -51,6 +52,19 @@ export default function AdminPage() {
     fetchAll()
   }
 
+  async function deleteManifest(m: any) {
+    if (!confirm(`Delete manifest "${m.file_name || m.rotation_no}"? This cannot be undone.`)) return
+    setDeletingId(m.id)
+    // Delete from storage if path exists
+    if (m.file_path) {
+      await supabase.storage.from('manifests').remove([m.file_path])
+    }
+    // Delete from DB
+    await supabase.from('manifests').delete().eq('id', m.id)
+    setDeletingId(null)
+    fetchAll()
+  }
+
   async function download(m: any) {
     const content = m.raw_content || JSON.stringify({ vessel_name: m.vessel_name, voyage_no: m.voyage_no, rotation_no: m.rotation_no }, null, 2)
     const a = document.createElement('a')
@@ -78,7 +92,9 @@ export default function AdminPage() {
       </div>
 
       <div className="tabs" style={{ marginBottom: '1rem' }}>
-        <button className={`tab${activeSection === 'users' ? ' active' : ''}`} onClick={() => setActiveSection('users')}>👥 Users {pending > 0 && <span className="badge badge-amber" style={{ marginLeft: 4 }}>{pending}</span>}</button>
+        <button className={`tab${activeSection === 'users' ? ' active' : ''}`} onClick={() => setActiveSection('users')}>
+          👥 Users {pending > 0 && <span className="badge badge-amber" style={{ marginLeft: 4 }}>{pending}</span>}
+        </button>
         <button className={`tab${activeSection === 'vessels' ? ' active' : ''}`} onClick={() => setActiveSection('vessels')}>🚢 Vessels</button>
         <button className={`tab${activeSection === 'manifests' ? ' active' : ''}`} onClick={() => setActiveSection('manifests')}>📄 Manifests</button>
       </div>
@@ -128,7 +144,8 @@ export default function AdminPage() {
         <div className="card">
           <p className="section-label">Vessel master</p>
           <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
-            <input type="text" value={newVessel} onChange={e => { setNewVessel(e.target.value); setVesselMsg(null) }}
+            <input type="text" value={newVessel}
+              onChange={e => { setNewVessel(e.target.value); setVesselMsg(null) }}
               placeholder="Enter vessel name e.g. MV Kota Baru"
               onKeyDown={e => e.key === 'Enter' && addVessel()}
               style={{ flex: 1 }} />
@@ -136,18 +153,14 @@ export default function AdminPage() {
           </div>
           {vesselMsg && <div className={`alert alert-${vesselMsg.type}`} style={{ marginBottom: '1rem' }}>{vesselMsg.type === 'success' ? '✓' : '⚠'} {vesselMsg.msg}</div>}
           {vessels.length === 0 ? (
-            <div className="empty">No vessels added yet. Add your first vessel above.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {vessels.map(v => (
-                <div key={v.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '0.5px solid var(--border)' }}>
-                  <span style={{ fontSize: 16, marginRight: 10 }}>🚢</span>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{v.name}</span>
-                  <button className="btn btn-sm btn-danger" onClick={() => removeVessel(v.id, v.name)}>Remove</button>
-                </div>
-              ))}
+            <div className="empty">No vessels added yet.</div>
+          ) : vessels.map(v => (
+            <div key={v.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '0.5px solid var(--border)' }}>
+              <span style={{ fontSize: 16, marginRight: 10 }}>🚢</span>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{v.name}</span>
+              <button className="btn btn-sm btn-danger" onClick={() => removeVessel(v.id, v.name)}>Remove</button>
             </div>
-          )}
+          ))}
         </div>
       )}
 
@@ -164,6 +177,14 @@ export default function AdminPage() {
               <div className="mr-right">
                 <span className={`badge ${BMAP[m.status] || 'badge-blue'}`}>{BLBL[m.status] || m.status}</span>
                 <button className="btn btn-dl" onClick={() => download(m)}>↓ Download</button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deleteManifest(m)}
+                  disabled={deletingId === m.id}
+                  style={{ padding: '5px 10px' }}
+                >
+                  {deletingId === m.id ? '...' : '🗑'}
+                </button>
               </div>
             </div>
           ))}
