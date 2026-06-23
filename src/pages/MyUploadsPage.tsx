@@ -61,7 +61,7 @@ export default function MyUploadsPage() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  async function fetchData() {
+async function fetchData() {
     const { data } = await supabase.from('manifests').select('*')
       .eq('uploaded_by', user!.id).order('created_at', { ascending: false })
     setManifests(data || [])
@@ -338,4 +338,56 @@ export default function MyUploadsPage() {
                     onChange={e => { setVesselSearch(e.target.value); setEditFields(p => ({ ...p, vessel_name: e.target.value })); setShowVesselDropdown(true) }}
                     onFocus={() => setShowVesselDropdown(true)} placeholder="Search or select vessel..." autoComplete="off" />
                   {showVesselDropdown && filteredVessels.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#fff', border: '0.
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#fff', border: '0.5px solid var(--border-hover)', borderRadius: 'var(--radius)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', maxHeight: 160, overflowY: 'auto', marginTop: 2 }}>
+                      {filteredVessels.map(v => (
+                        <div key={v} onMouseDown={() => { setEditFields(p => ({ ...p, vessel_name: v })); setVesselSearch(v); setShowVesselDropdown(false) }}
+                          style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}
+                          onMouseEnter={e => (e.target as HTMLElement).style.background = 'var(--gray-100)'}
+                          onMouseLeave={e => (e.target as HTMLElement).style.background = 'transparent'}>
+                          🚢 {v}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="grid-2">
+                  <div className="field-group">
+                    <div className="field-label">Voyage no. <span className="req">*</span></div>
+                    <input type="text" value={editFields.voyage_no} onChange={e => setEditFields(p => ({ ...p, voyage_no: e.target.value }))} placeholder="e.g. 2025/44" />
+                  </div>
+                  <div className="field-group">
+                    <div className="field-label">Rotation no. <span className="req">*</span></div>
+                    <input type="text" value={editFields.rotation_no} maxLength={7}
+                      onChange={e => setEditFields(p => ({ ...p, rotation_no: e.target.value.replace(/\D/g, '') }))} placeholder="e.g. 1198010" />
+                  </div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Update file <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <button className={`btn btn-sm${!replaceFile ? ' btn-primary' : ''}`} onClick={() => setReplaceFile(false)}>Add alongside</button>
+                    <button className={`btn btn-sm${replaceFile ? ' btn-primary' : ''}`} onClick={() => setReplaceFile(true)}>Replace old file</button>
+                  </div>
+                  <div className="drop-zone" style={{ padding: '0.75rem' }} onClick={() => fileRef.current?.click()}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); const fl = e.dataTransfer.files[0]; if (fl?.name.endsWith('.json')) setNewFile(fl) }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      {newFile ? `✓ ${newFile.name}` : 'Click or drop new JSON file'}
+                    </div>
+                  </div>
+                  <input ref={fileRef} type="file" accept=".json" style={{ display: 'none' }}
+                    onChange={e => { if (e.target.files?.[0]) setNewFile(e.target.files[0]) }} />
+                </div>
+                {editAlert && <div className={`alert alert-${editAlert.type}`} style={{ marginBottom: '0.75rem' }}>{editAlert.msg}</div>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-primary" onClick={() => saveEdit(group.files[0])} disabled={saving}>{saving ? 'Saving...' : '✓ Save changes'}</button>
+                  <button className="btn" onClick={cancelEdit}>Cancel</button>
+                </div>
+                {!saving && <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>All active CHA users will be notified of this update.</p>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
