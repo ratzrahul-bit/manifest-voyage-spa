@@ -2,23 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 
-const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY as string
-const SENDER_EMAIL = 'noreply@igmnepal.brevo.com'
-const SENDER_NAME = 'IGM Nepal'
-
 async function sendEmail(to: string, toName: string, subject: string, html: string) {
-  await fetch('https://api.brevo.com/v3/smtp/email', {
+  await fetch('/.netlify/functions/send-email', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': BREVO_API_KEY,
-    },
-    body: JSON.stringify({
-      sender: { name: SENDER_NAME, email: SENDER_EMAIL },
-      to: [{ email: to, name: toName }],
-      subject,
-      htmlContent: html,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, toName, subject, html }),
   })
 }
 
@@ -117,7 +105,7 @@ export default function UploadPage() {
       // Send acknowledgement to uploader
       await sendEmail(
         user!.email, user!.name,
-        `✓ Manifest uploaded — Rotation ${rotation}`,
+        `Manifest uploaded — Rotation ${rotation}`,
         `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
           <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — Upload Acknowledgement</h2>
           <p>Dear ${user!.name},</p>
@@ -133,13 +121,13 @@ export default function UploadPage() {
         </div>`
       )
 
-      // Fetch all CHA users and notify them
+      // Notify all active CHA users
       const { data: chaUsers } = await supabase.from('profiles')
         .select('email, name').eq('role', 'cha').eq('status', 'active')
       if (chaUsers && chaUsers.length > 0) {
         await Promise.all(chaUsers.map((cha: any) => sendEmail(
           cha.email, cha.name,
-          `🚢 New manifest available — ${vessel} · Rotation ${rotation}`,
+          `New manifest available — ${vessel} · Rotation ${rotation}`,
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
             <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — New Manifest Available</h2>
             <p>Dear ${cha.name},</p>
@@ -151,7 +139,7 @@ export default function UploadPage() {
               <tr><td style="padding:10px;font-weight:600">Uploaded by</td><td style="padding:10px">${user!.name} · ${user!.company}</td></tr>
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Files</td><td style="padding:10px">${files.length} file${files.length > 1 ? 's' : ''}</td></tr>
             </table>
-            <p><a href="https://igmnepal.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">↓ Download manifest</a></p>
+            <p><a href="https://igmnepal.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
             <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
           </div>`
         )))
