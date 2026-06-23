@@ -96,6 +96,11 @@ export default function AdminPage() {
     setNewVessel(''); setVesselMsg({ type: 'success', msg: `${name} added.` }); fetchAll()
   }
 
+  async function deleteUser(id: string, name: string) {
+  if (!confirm(`Permanently delete user "${name}"? This cannot be undone.`)) return
+  await supabase.from('profiles').delete().eq('id', id)
+  fetchAll()
+}
   async function removeVessel(id: string, name: string) {
     if (!confirm(`Remove "${name}" from vessel list?`)) return
     await supabase.from('vessels').delete().eq('id', id); fetchAll()
@@ -203,7 +208,7 @@ export default function AdminPage() {
                     <button className="btn btn-success btn-sm" onClick={() => updateUserStatus(u.id, 'active')}>✓ Approve</button>
                     <button className="btn btn-danger btn-sm" onClick={() => updateUserStatus(u.id, 'rejected')}>✕ Reject</button>
                   </>}
-                  {u.status === 'active' && <button className="btn btn-sm" onClick={() => updateUserStatus(u.id, 'pending')}>Suspend</button>}
+                  {u.status === 'active' && <button className="btn btn-danger btn-sm" onClick={() => deleteUser(u.id, u.name)}>🗑 Delete</button>}
                   {u.status === 'rejected' && <button className="btn btn-sm" onClick={() => updateUserStatus(u.id, 'active')}>Reinstate</button>}
                 </div>
               </div>
