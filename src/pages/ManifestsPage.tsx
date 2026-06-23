@@ -9,6 +9,7 @@ export default function ManifestsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => { fetchManifests() }, [])
 
@@ -19,20 +20,27 @@ export default function ManifestsPage() {
   }
 
   async function download(m: any) {
-    const content = m.raw_content || JSON.stringify({
-      manifest_id: m.id,
-      vessel_name: m.vessel_name,
-      voyage_no: m.voyage_no,
-      rotation_no: m.rotation_no,
-      uploaded_by: m.uploader_name,
-      company: m.uploader_company,
-      date: m.created_at?.slice(0, 10),
-      generated_by: 'Vessel Manifest Exchange'
-    }, null, 2)
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
-    a.download = `${m.vessel_name.replace(/\s+/g, '_')}_VOY${m.voyage_no.replace(/\//g, '-')}_ROT${m.rotation_no}_manifest.json`
-    a.click()
+    setDownloading(m.id)
+    try {
+      if (m.file_path) {
+        const { data, error } = await supabase.storage.from('manifests').download(m.file_path)
+        if (error) throw error
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(data)
+        a.download = m.file_name || `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        a.click()
+      } else {
+        // Fallback for old records without file_path
+        const content = JSON.stringify({ vessel_name: m.vessel_name, voyage_no: m.voyage_no, rotation_no: m.rotation_no }, null, 2)
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
+        a.download = `${m.vessel_name.replace(/\s+/g, '_')}_ROT${m.rotation_no}_manifest.json`
+        a.click()
+      }
+    } catch (err) {
+      alert('Download failed. Please try again.')
+    }
+    setDownloading(null)
   }
 
   const filtered = manifests.filter(m => {
@@ -73,7 +81,9 @@ export default function ManifestsPage() {
             </div>
             <div className="mr-right">
               <span className={`badge ${BMAP[m.status] || 'badge-blue'}`}>{BLBL[m.status] || m.status}</span>
-              <button className="btn btn-dl" onClick={() => download(m)}>↓ Download</button>
+              <button className="btn btn-dl" onClick={() => download(m)} disabled={downloading === m.id}>
+                {downloading === m.id ? '...' : '↓ Download'}
+              </button>
             </div>
           </div>
         ))}
