@@ -51,14 +51,12 @@ export default function AdminPage() {
   const [savingUser, setSavingUser] = useState(false)
   const [editingVesselId, setEditingVesselId] = useState<string | null>(null)
   const [editVesselName, setEditVesselName] = useState('')
-  // Rotation-level field edit
   const [editingRotation, setEditingRotation] = useState<string | null>(null)
   const [editFields, setEditFields] = useState({ vessel_name: '', voyage_no: '', rotation_no: '' })
   const [vesselSearch, setVesselSearch] = useState('')
   const [showVesselDrop, setShowVesselDrop] = useState(false)
   const [editAlert, setEditAlert] = useState<{ type: string; msg: string } | null>(null)
   const [savingRotation, setSavingRotation] = useState(false)
-  // File-level replacement
   const [replacingFileId, setReplacingFileId] = useState<string | null>(null)
   const [newFile, setNewFile] = useState<File | null>(null)
   const [replaceMode, setReplaceMode] = useState(false)
@@ -131,14 +129,14 @@ export default function AdminPage() {
       }).eq('id', f.id)))
 
       const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-        <h2 style="color:#185FA5">ManifestNepal — Manifest Updated</h2>
+        <h2 style="color:#185FA5">Himalayan Manifest — Manifest Updated</h2>
         <p>A manifest has been updated by the admin.</p>
         <table style="width:100%;border-collapse:collapse;margin:20px 0">
           <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Vessel</td><td style="padding:10px">${editFields.vessel_name}</td></tr>
           <tr><td style="padding:10px;font-weight:600">Voyage</td><td style="padding:10px">${editFields.voyage_no}</td></tr>
           <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Rotation</td><td style="padding:10px">${editFields.rotation_no}</td></tr>
         </table>
-        <p><a href="https://igmnepal.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
+        <p><a href="https://himalayanmanifest.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
       </div>`
 
       const { data: chaUsers } = await supabase.from('profiles').select('email, name').eq('role', 'cha').eq('status', 'active')
@@ -226,26 +224,26 @@ export default function AdminPage() {
       const u = users.find(x => x.id === id)
       if (u?.email) {
         const roleLabel = u.role === 'cha' ? 'CHA (Customs House Agent)' : 'Shipping Line / Liner Agent'
-        await sendEmail(u.email, u.name, 'Your ManifestNepal account has been approved',
+        await sendEmail(u.email, u.name, 'Your Himalayan Manifest account has been approved',
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#185FA5">ManifestNepal — Account Approved</h2>
+            <h2 style="color:#185FA5">Himalayan Manifest — Account Approved</h2>
             <p>Dear ${u.name}, your registration has been approved.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0">
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Name</td><td style="padding:10px">${u.name}</td></tr>
               <tr><td style="padding:10px;font-weight:600">Company</td><td style="padding:10px">${u.company}</td></tr>
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">User type</td><td style="padding:10px">${roleLabel}</td></tr>
             </table>
-            <p><a href="https://igmnepal.netlify.app" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Sign in →</a></p>
+            <p><a href="https://himalayanmanifest.netlify.app" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Sign in →</a></p>
           </div>`)
       }
     }
     if (status === 'rejected') {
       const u = users.find(x => x.id === id)
       if (u?.email) {
-        await sendEmail(u.email, u.name, 'Your ManifestNepal registration was not approved',
+        await sendEmail(u.email, u.name, 'Your Himalayan Manifest registration was not approved',
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#A32D2D">ManifestNepal — Registration Update</h2>
-            <p>Dear ${u.name}, your registration could not be approved. Contact <a href="mailto:manifestnepal@gmail.com">manifestnepal@gmail.com</a>.</p>
+            <h2 style="color:#A32D2D">Himalayan Manifest — Registration Update</h2>
+            <p>Dear ${u.name}, your registration could not be approved. Contact <a href="mailto:himalayanmanifest@gmail.com">himalayanmanifest@gmail.com</a>.</p>
           </div>`)
       }
     }
@@ -410,8 +408,6 @@ export default function AdminPage() {
           <p className="section-label">All manifests — {groups.length} rotation{groups.length !== 1 ? 's' : ''} · {manifests.length} file{manifests.length !== 1 ? 's' : ''}</p>
           {groups.length === 0 ? <div className="empty">No manifests uploaded yet.</div> : groups.map(group => (
             <div key={group.key} style={{ borderBottom: '0.5px solid var(--border)', padding: '12px 0' }}>
-
-              {/* Rotation header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <div className="mr-icon">📦</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -451,7 +447,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Fields edit panel — ONE per rotation */}
               {editingRotation === group.key && (
                 <div style={{ background: 'var(--gray-50)', borderRadius: 'var(--radius)', padding: '1rem', marginTop: 10 }}>
                   <p className="section-label" style={{ marginBottom: '0.75rem' }}>Edit manifest details</p>
@@ -500,7 +495,6 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Single file — file replace button when edit open */}
               {group.files.length === 1 && editingRotation === group.key && (
                 <div style={{ marginTop: 8, marginLeft: 42 }}>
                   {replacingFileId === group.files[0].id ? (
@@ -528,7 +522,6 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Multi-file expanded list */}
               {group.files.length > 1 && expanded.has(group.key) && (
                 <div style={{ marginTop: 8, marginLeft: 42, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {group.files.map((f, i) => (
