@@ -6,6 +6,7 @@ import ManifestsPage from './pages/ManifestsPage'
 import MyUploadsPage from './pages/MyUploadsPage'
 import AdminPage from './pages/AdminPage'
 import PendingPage from './pages/PendingPage'
+import ContactPage from './pages/ContactPage'
 import AppShell from './components/AppShell'
 
 function Inner() {
@@ -23,6 +24,7 @@ function Inner() {
         <Route path="/my-uploads" element={<MyUploadsPage />} />
         {(user.role === 'cha' || user.role === 'admin') && <Route path="/manifests" element={<ManifestsPage />} />}
         {user.role === 'admin' && <Route path="/admin" element={<AdminPage />} />}
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </AppShell>
