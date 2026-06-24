@@ -17,6 +17,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { label: '≡ My uploads', path: '/my-uploads', roles: ['shipping_line', 'cha', 'admin'] },
     { label: '↓ Download', path: '/manifests', roles: ['cha', 'admin'] },
     { label: '⚙ Admin', path: '/admin', roles: ['admin'] },
+    { label: '✉ Contact', path: '/contact', roles: ['admin', 'shipping_line', 'cha'] },
   ].filter(t => t.roles.includes(user.role))
 
   return (
