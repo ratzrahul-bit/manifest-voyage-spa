@@ -3,7 +3,7 @@ export default function ContactPage() {
     <div>
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div style={{ textAlign: 'center', padding: '0.5rem 0 1rem' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--blue-dark)', fontFamily: 'Cambria, serif' }}>ManifestNepal</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--blue-dark)', fontFamily: 'Cambria, serif' }}>Himalayan Manifest</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>India-Nepal Manifest Exchange</div>
         </div>
 
@@ -14,7 +14,7 @@ export default function ContactPage() {
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--blue-dark)', marginBottom: 6 }}>📋 Registration & Access</div>
             <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>
               Your account will be approved within <strong>6 hours</strong> of registration.
-              <br />If not approved, please write to us at <strong>manifestnepal@gmail.com</strong>
+              <br />If not approved, please write to us at <strong>himalayanmanifest@gmail.com</strong>
             </div>
           </div>
 
@@ -43,11 +43,11 @@ export default function ContactPage() {
           <div style={{ fontSize: 12, fontWeight: 600, color: '#5BB8E8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Get in touch</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <a href="mailto:manifestnepal@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius)', padding: '12px 16px', textDecoration: 'none' }}>
+          <a href="mailto:himalayanmanifest@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius)', padding: '12px 16px', textDecoration: 'none' }}>
             <span style={{ fontSize: 20 }}>📧</span>
             <div>
               <div style={{ fontSize: 11, color: '#A0C4D8', marginBottom: 2 }}>Email</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#FFFFFF' }}>manifestnepal@gmail.com</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#FFFFFF' }}>himalayanmanifest@gmail.com</div>
             </div>
           </a>
           <a href="tel:+919864111118" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius)', padding: '12px 16px', textDecoration: 'none' }}>
@@ -61,7 +61,7 @@ export default function ContactPage() {
             <span style={{ fontSize: 20 }}>🌐</span>
             <div>
               <div style={{ fontSize: 11, color: '#A0C4D8', marginBottom: 2 }}>Platform</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#FFFFFF' }}>manifestnepal.netlify.app</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#FFFFFF' }}>himalayanmanifest.netlify.app</div>
             </div>
           </div>
         </div>
