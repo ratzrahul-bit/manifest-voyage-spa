@@ -125,7 +125,7 @@ export default function MyUploadsPage() {
           <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Rotation</td><td style="padding:10px">${editFields.rotation_no}</td></tr>
           <tr><td style="padding:10px;font-weight:600">Updated by</td><td style="padding:10px">${user!.name} · ${user!.company}</td></tr>
         </table>
-        <p><a href="https://igmnepal.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
+        <p><a href="https://himalayanmanifest.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
       </div>`
 
       const { data: chaUsers } = await supabase.from('profiles').select('email, name').eq('role', 'cha').eq('status', 'active')
