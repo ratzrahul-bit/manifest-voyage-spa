@@ -4,7 +4,7 @@ export default function ContactPage() {
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div style={{ textAlign: 'center', padding: '0.5rem 0 1rem' }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--blue-dark)', fontFamily: 'Cambria, serif' }}>Himalayan Manifest</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>India-Nepal Manifest Exchange</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>Free tool for manifest exchange for Nepal/Bhutan Transhipment Cargo</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
