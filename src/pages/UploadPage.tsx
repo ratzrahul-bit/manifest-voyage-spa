@@ -114,7 +114,7 @@ export default function UploadPage() {
         user!.email, user!.name,
         `Manifest uploaded — ${vessel} · Voyage ${voyage} · Rotation ${rotation}`,
         `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-          <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — Upload Acknowledgement</h2>
+          <h2 style="color:#185FA5;margin-bottom:16px">Himalayan Manifest — Upload Acknowledgement</h2>
           <p>Dear ${user!.name},</p>
           <p>Your manifest has been successfully uploaded to the IGM Nepal platform.</p>
           <table style="width:100%;border-collapse:collapse;margin:20px 0">
@@ -136,7 +136,7 @@ export default function UploadPage() {
           cha.email, cha.name,
           `New manifest available — ${vessel} · Voyage ${voyage} · Rotation ${rotation}`,
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — New Manifest Available</h2>
+            <h2 style="color:#185FA5;margin-bottom:16px">Himalayan Manifest — New Manifest Available</h2>
             <p>Dear ${cha.name},</p>
             <p>A new manifest has been uploaded and is available for download on the IGM Nepal platform.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0">
@@ -146,7 +146,7 @@ export default function UploadPage() {
               <tr><td style="padding:10px;font-weight:600">Uploaded by</td><td style="padding:10px">${user!.name} · ${user!.company}</td></tr>
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Files</td><td style="padding:10px">${files.length} file${files.length > 1 ? 's' : ''}</td></tr>
             </table>
-            <p><a href="https://igmnepal.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
+            <p><a href="https://himalayanmanifest.netlify.app/manifests" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Download manifest</a></p>
             <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
           </div>`
         )))
