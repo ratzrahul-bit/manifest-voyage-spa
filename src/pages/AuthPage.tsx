@@ -34,7 +34,7 @@ export default function AuthPage() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setError(''); setLoading(true)
-    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'manifestnepal@gmail.com'
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'himalayanmanifest@gmail.com'
     const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
@@ -49,14 +49,13 @@ export default function AuthPage() {
         status: isAdmin ? 'active' : 'pending',
       })
 
-      // Notify admin of new registration (skip if admin registering themselves)
       if (!isAdmin) {
         const roleLabel = role === 'cha' ? 'CHA (Customs House Agent)' : 'Shipping Line / Liner Agent'
         await sendEmail(
           ADMIN_EMAIL, 'Admin',
           `New registration — ${name} · ${company}`,
           `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <h2 style="color:#185FA5;margin-bottom:16px">IGM Nepal — New User Registration</h2>
+            <h2 style="color:#185FA5;margin-bottom:16px">Himalayan Manifest — New User Registration</h2>
             <p>A new user has registered and is awaiting your approval.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0">
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">Name</td><td style="padding:10px">${name}</td></tr>
@@ -65,8 +64,8 @@ export default function AuthPage() {
               <tr><td style="padding:10px;font-weight:600">Mobile</td><td style="padding:10px">${mobile || '—'}</td></tr>
               <tr style="background:#E6F1FB"><td style="padding:10px;font-weight:600">User type</td><td style="padding:10px">${roleLabel}</td></tr>
             </table>
-            <p><a href="https://igmnepal.netlify.app/admin" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Go to Admin Panel → Approve</a></p>
-            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from IGM Nepal Manifest Exchange.</p>
+            <p><a href="https://himalayanmanifest.netlify.app/admin" style="background:#185FA5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Go to Admin Panel → Approve</a></p>
+            <p style="color:#6B7280;font-size:13px;margin-top:16px">This is an automated message from Himalayan Manifest.</p>
           </div>`
         )
       }
@@ -79,9 +78,9 @@ export default function AuthPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gray-50)', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ width: 48, height: 48, background: 'var(--blue-light)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 24 }}>🚢</div>
-          <div style={{ fontSize: 18, fontWeight: 600 }}>India-Nepal Manifest Exchange</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Secure manifest sharing for the India–Nepal trade corridor</div>
+          <div style={{ width: 48, height: 48, background: 'var(--blue-light)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 24 }}>🏔️</div>
+          <div style={{ fontSize: 18, fontWeight: 600 }}>Himalayan Manifest</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Free tool for manifest exchange for Nepal/Bhutan Transhipment Cargo</div>
         </div>
 
         <div className="card">
